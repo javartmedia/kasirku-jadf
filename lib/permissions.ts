@@ -1,0 +1,114 @@
+export const PERMISSIONS = {
+  DASHBOARD: {
+    VIEW: 'dashboard.view',
+  },
+  MENU: {
+    VIEW: 'menu.view',
+    CREATE: 'menu.create',
+    EDIT: 'menu.edit',
+    DELETE: 'menu.delete',
+    IMPORT: 'menu.import',
+    EXPORT: 'menu.export',
+  },
+  CATEGORY: {
+    VIEW: 'category.view',
+    CREATE: 'category.create',
+    EDIT: 'category.edit',
+    DELETE: 'category.delete',
+  },
+  TABLE: {
+    VIEW: 'table.view',
+    CREATE: 'table.create',
+    EDIT: 'table.edit',
+    DELETE: 'table.delete',
+  },
+  ORDER: {
+    VIEW: 'order.view',
+    CREATE: 'order.create',
+    EDIT: 'order.edit',
+    CANCEL: 'order.cancel',
+    COMPLETE: 'order.complete',
+  },
+  PAYMENT: {
+    VIEW: 'payment.view',
+    CREATE: 'payment.create',
+    REFUND: 'payment.refund',
+  },
+  CUSTOMER: {
+    VIEW: 'customer.view',
+    CREATE: 'customer.create',
+    EDIT: 'customer.edit',
+    DELETE: 'customer.delete',
+  },
+  EXPENSE: {
+    VIEW: 'expense.view',
+    CREATE: 'expense.create',
+    EDIT: 'expense.edit',
+    DELETE: 'expense.delete',
+  },
+  STOCK: {
+    VIEW: 'stock.view',
+    ADJUST: 'stock.adjust',
+  },
+  PURCHASE: {
+    VIEW: 'purchase.view',
+    CREATE: 'purchase.create',
+    EDIT: 'purchase.edit',
+    DELETE: 'purchase.delete',
+  },
+  REPORT: {
+    VIEW: 'report.view',
+    EXPORT: 'report.export',
+  },
+  USER: {
+    VIEW: 'user.view',
+    CREATE: 'user.create',
+    EDIT: 'user.edit',
+    DELETE: 'user.delete',
+  },
+  SETTINGS: {
+    VIEW: 'settings.view',
+    EDIT: 'settings.edit',
+  },
+  SHIFT: {
+    VIEW: 'shift.view',
+    MANAGE: 'shift.manage',
+  },
+} as const;
+
+export const ROLE_PERMISSIONS = {
+  owner: Object.values(PERMISSIONS).flatMap(Object.values),
+  manager: [
+    PERMISSIONS.DASHBOARD.VIEW,
+    PERMISSIONS.MENU.VIEW, PERMISSIONS.MENU.CREATE, PERMISSIONS.MENU.EDIT,
+    PERMISSIONS.CATEGORY.VIEW, PERMISSIONS.CATEGORY.CREATE, PERMISSIONS.CATEGORY.EDIT,
+    PERMISSIONS.TABLE.VIEW, PERMISSIONS.TABLE.CREATE, PERMISSIONS.TABLE.EDIT,
+    PERMISSIONS.ORDER.VIEW, PERMISSIONS.ORDER.CREATE, PERMISSIONS.ORDER.EDIT, PERMISSIONS.ORDER.CANCEL, PERMISSIONS.ORDER.COMPLETE,
+    PERMISSIONS.PAYMENT.VIEW, PERMISSIONS.PAYMENT.CREATE,
+    PERMISSIONS.CUSTOMER.VIEW, PERMISSIONS.CUSTOMER.CREATE, PERMISSIONS.CUSTOMER.EDIT,
+    PERMISSIONS.EXPENSE.VIEW, PERMISSIONS.EXPENSE.CREATE, PERMISSIONS.EXPENSE.EDIT,
+    PERMISSIONS.STOCK.VIEW, PERMISSIONS.STOCK.ADJUST,
+    PERMISSIONS.PURCHASE.VIEW, PERMISSIONS.PURCHASE.CREATE, PERMISSIONS.PURCHASE.EDIT,
+    PERMISSIONS.REPORT.VIEW, PERMISSIONS.REPORT.EXPORT,
+    PERMISSIONS.SHIFT.VIEW, PERMISSIONS.SHIFT.MANAGE,
+  ],
+  admin: [
+    PERMISSIONS.DASHBOARD.VIEW,
+    PERMISSIONS.MENU.VIEW, PERMISSIONS.MENU.CREATE, PERMISSIONS.MENU.EDIT,
+    PERMISSIONS.CATEGORY.VIEW, PERMISSIONS.CATEGORY.CREATE, PERMISSIONS.CATEGORY.EDIT,
+    PERMISSIONS.TABLE.VIEW, PERMISSIONS.TABLE.CREATE, PERMISSIONS.TABLE.EDIT,
+    PERMISSIONS.ORDER.VIEW, PERMISSIONS.ORDER.CREATE, PERMISSIONS.ORDER.EDIT,
+    PERMISSIONS.PAYMENT.VIEW, PERMISSIONS.PAYMENT.CREATE,
+    PERMISSIONS.CUSTOMER.VIEW, PERMISSIONS.CUSTOMER.CREATE, PERMISSIONS.CUSTOMER.EDIT,
+    PERMISSIONS.STOCK.VIEW,
+    PERMISSIONS.REPORT.VIEW,
+    PERMISSIONS.SHIFT.VIEW,
+  ],
+  cashier: [
+    PERMISSIONS.DASHBOARD.VIEW,
+    PERMISSIONS.ORDER.VIEW, PERMISSIONS.ORDER.CREATE, PERMISSIONS.ORDER.EDIT,
+    PERMISSIONS.PAYMENT.VIEW, PERMISSIONS.PAYMENT.CREATE,
+    PERMISSIONS.CUSTOMER.VIEW, PERMISSIONS.CUSTOMER.CREATE,
+    PERMISSIONS.SHIFT.VIEW, PERMISSIONS.SHIFT.MANAGE,
+  ],
+};
