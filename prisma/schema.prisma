@@ -1,0 +1,539 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  email         String?   @unique
+  password      String
+  name          String
+  phone         String?
+  avatar        String?
+  roleId        String
+  role          Role      @relation(fields: [roleId], references: [id])
+  isActive      Boolean   @default(true)
+  lastLogin     DateTime?
+  shiftId       String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  sessions      Session[]
+  orders        Order[]
+  payments      Payment[]
+  cashDrawers   CashDrawer[]
+  shifts        Shift[]
+  activityLogs  ActivityLog[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+
+  @@index([username])
+  @@index([email])
+  @@index([roleId])
+  @@map("users")
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  description String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  description String?
+  module      String
+  action      String
+  createdAt   DateTime         @default(now())
+
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String     @id @default(cuid())
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  image       String?
+  sortOrder   Int       @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  menus       Menu[]
+
+  @@map("categories")
+}
+
+model Menu {
+  id          String      @id @default(cuid())
+  code        String      @unique
+  barcode     String?     @unique
+  name        String
+  description String?
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id])
+  price       Float
+  cost        Float       @default(0)
+  stock       Int         @default(0)
+  minStock    Int         @default(5)
+  isActive    Boolean     @default(true)
+  isAvailable Boolean     @default(true)
+  taxId       String?
+  tax         Tax?        @relation(fields: [taxId], references: [id])
+  discountId  String?
+  discount    Discount?   @relation(fields: [discountId], references: [id])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  deletedAt   DateTime?
+
+  images     MenuImage[]
+  orderItems OrderItem[]
+  stockMovements StockMovement[]
+  purchaseItems PurchaseItem[]
+  dailySales DailySale[]
+
+  @@index([categoryId])
+  @@index([code])
+  @@map("menus")
+}
+
+model MenuImage {
+  id        String   @id @default(cuid())
+  menuId    String
+  menu      Menu     @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  url       String
+  isPrimary Boolean  @default(false)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@map("menu_images")
+}
+
+model Table {
+  id        String   @id @default(cuid())
+  number    String   @unique
+  qrCode    String?  @unique
+  status    String   @default("available")
+  capacity  Int      @default(4)
+  position  String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  orders    Order[]
+
+  @@map("tables")
+}
+
+model Order {
+  id          String    @id @default(cuid())
+  orderNumber String    @unique
+  type        String
+  status      String    @default("draft")
+  tableId     String?
+  table       Table?    @relation(fields: [tableId], references: [id])
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id])
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  subtotal    Float     @default(0)
+  taxAmount   Float     @default(0)
+  discountAmount Float  @default(0)
+  total       Float     @default(0)
+  note        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  items       OrderItem[]
+  payments    Payment[]
+  activityLogs ActivityLog[]
+
+  @@index([orderNumber])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuId      String
+  menu        Menu     @relation(fields: [menuId], references: [id])
+  quantity    Int
+  price       Float
+  discount    Float    @default(0)
+  tax         Float    @default(0)
+  subtotal    Float
+  note        String?
+  status      String   @default("pending")
+  createdAt   DateTime @default(now())
+
+  @@map("order_items")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String
+  order         Order         @relation(fields: [orderId], references: [id])
+  paymentMethodId String
+  paymentMethod PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  amount        Float
+  change        Float         @default(0)
+  reference     String?
+  status        String        @default("completed")
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  createdAt     DateTime      @default(now())
+
+  @@index([orderId])
+  @@map("payments")
+}
+
+model PaymentMethod {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  code        String    @unique
+  description String?
+  isActive    Boolean   @default(true)
+  icon        String?
+  createdAt   DateTime  @default(now())
+
+  payments    Payment[]
+
+  @@map("payment_methods")
+}
+
+model Customer {
+  id          String    @id @default(cuid())
+  name        String
+  phone       String?   @unique
+  email       String?   @unique
+  address     String?
+  points      Int       @default(0)
+  memberType  String    @default("regular")
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  orders      Order[]
+
+  @@map("customers")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  categoryId  String
+  category    ExpenseCategory @relation(fields: [categoryId], references: [id])
+  amount      Float
+  description String?
+  attachment  String?
+  date        DateTime @default(now())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@index([date])
+  @@map("expenses")
+}
+
+model ExpenseCategory {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  expenses    Expense[]
+
+  @@map("expense_categories")
+}
+
+model StockMovement {
+  id          String   @id @default(cuid())
+  menuId      String
+  menu        Menu     @relation(fields: [menuId], references: [id])
+  type        String
+  quantity    Int
+  beforeQty   Int
+  afterQty    Int
+  reference   String?
+  note        String?
+  userId      String
+  createdAt   DateTime @default(now())
+
+  @@index([menuId])
+  @@index([type])
+  @@map("stock_movements")
+}
+
+model Supplier {
+  id          String    @id @default(cuid())
+  name        String
+  company     String?
+  phone       String?
+  email       String?
+  address     String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  purchases   PurchaseOrder[]
+
+  @@map("suppliers")
+}
+
+model PurchaseOrder {
+  id          String   @id @default(cuid())
+  poNumber    String   @unique
+  supplierId  String
+  supplier    Supplier @relation(fields: [supplierId], references: [id])
+  status      String   @default("pending")
+  total       Float    @default(0)
+  note        String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  items       PurchaseItem[]
+
+  @@map("purchase_orders")
+}
+
+model PurchaseItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  menuId          String
+  menu            Menu          @relation(fields: [menuId], references: [id])
+  quantity        Int
+  price           Float
+  subtotal        Float
+  createdAt       DateTime      @default(now())
+
+  @@map("purchase_items")
+}
+
+model Discount {
+  id          String    @id @default(cuid())
+  name        String
+  code        String    @unique
+  type        String
+  value       Float
+  minPurchase Float?
+  maxDiscount Float?
+  isActive    Boolean   @default(true)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  menus       Menu[]
+
+  @@map("discounts")
+}
+
+model Tax {
+  id          String    @id @default(cuid())
+  name        String
+  rate        Float
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  menus       Menu[]
+
+  @@map("taxes")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model CashDrawer {
+  id          String   @id @default(cuid())
+  shiftId     String
+  shift       Shift    @relation(fields: [shiftId], references: [id])
+  type        String
+  amount      Float
+  description String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@map("cash_drawers")
+}
+
+model Shift {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  startTime   DateTime @default(now())
+  endTime     DateTime?
+  openingBalance Float  @default(0)
+  closingBalance Float?
+  cashIn      Float    @default(0)
+  cashOut     Float    @default(0)
+  difference  Float?
+  status      String   @default("open")
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  cashDrawers CashDrawer[]
+
+  @@map("shifts")
+}
+
+model ReceiptTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  headerText  String?
+  footerText  String?
+  showLogo    Boolean  @default(true)
+  showQr      Boolean  @default(true)
+  paperSize   String   @default("58mm")
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("receipt_templates")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("info")
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  module    String
+  targetId  String?
+  detail    String?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  orderId   String?
+  order     Order?   @relation(fields: [orderId], references: [id])
+
+  @@index([userId])
+  @@index([module])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String
+  oldValue  String?
+  newValue  String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Setting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model DailySale {
+  id        String   @id @default(cuid())
+  date      DateTime
+  menuId    String
+  menu      Menu     @relation(fields: [menuId], references: [id])
+  quantity  Int
+  total     Float
+  createdAt DateTime @default(now())
+
+  @@unique([date, menuId])
+  @@map("daily_sales")
+}
+
+model PrinterSetting {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   @default("thermal")
+  interface   String   @default("usb")
+  ipAddress   String?
+  port        String?
+  isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false)
+  receiptTemplateId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("printer_settings")
+}
